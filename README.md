@@ -1,393 +1,187 @@
 # AuraMusicServer
 
-A high-performance Go WebSocket server for AuraMusic's "Listen Together" feature. Built for synchronized group listening sessions with real-time playback control and song suggestion features.
-
-## Features
-
-- **Real-time Sync** - Synchronized playback across all listeners
-- **Room Management** - Create rooms with approval-based joining
-- **Playback Control** - Host controls play/pause/seek/skip
-- **Queue Management** - Manage and sync song queues
-- **Song Suggestions** - Guests can suggest tracks to the host
-- **Reconnection Support** - 15-minute reconnection grace period
-- **Lightweight** - Minimal resource footprint, built in Go
-- **Production Ready** - Graceful shutdown, health checks, logging
+High-performance WebSocket server for AuraMusic's synchronized group listening feature.
 
 ## Quick Start
 
-### Prerequisites
-
-- Go 1.25.6 or later (for local development)
-- Docker (for containerized deployment)
-- Docker Compose (optional, for local testing)
-
-### Local Development
-
-1. **Clone and setup:**
-```bash
-cd AuraMusicServer
-go mod download
-```
-
-2. **Run the server:**
-```bash
-PORT=8080 go run main.go
-```
-
-3. **Test the health endpoint:**
-```bash
-curl http://localhost:8080/health
-```
-
-### Docker Deployment
-
-1. **Build the image:**
-```bash
-docker build -t auramusic-server:latest .
-```
-
-2. **Run locally:**
-```bash
-docker run -d \
-  -p 8080:8080 \
-  -e PORT=8080 \
-  --name auramusic-server \
-  auramusic-server:latest
-```
-
-3. **Using Docker Compose:**
+### Local Testing
 ```bash
 docker-compose up -d
 ```
+Server runs on `ws://localhost:8080/ws`
 
-### Cloud Deployment
+### Deploy to Cloud
+See **DEPLOYMENT.md** for step-by-step guides for Railway, Render, DigitalOcean, etc.
 
-#### Railway.app (Recommended for starting)
+## API Overview
 
-1. Fork/push this repo to GitHub
-2. Connect your GitHub repo to Railway
-3. Set environment variable: `PORT=8080`
-4. Deploy - Railway will auto-build from Dockerfile
-5. Get your public URL from Railway dashboard
-
-#### Render.com
-
-1. Create new Web Service on Render
-2. Connect your GitHub repo
-3. Set build command: `go build -o main .`
-4. Set start command: `./main`
-5. Add environment variable: `PORT=8080`
-6. Deploy
-
-#### DigitalOcean App Platform
-
-1. Create new app
-2. Connect GitHub repo
-3. Select Docker as build type
-4. Set PORT=8080 in environment
-5. Deploy
-
-#### Self-hosted (VPS)
-
-For DigitalOcean Droplets, Linode, or Vultr:
-
-```bash
-# SSH into your server
-ssh root@your-server-ip
-
-# Install Docker
-curl -fsSL https://get.docker.com -o get-docker.sh
-sudo sh get-docker.sh
-
-# Clone and deploy
-git clone https://github.com/your-username/AuraMusicServer
-cd AuraMusicServer
-docker-compose up -d
-
-# Setup reverse proxy with Caddy (automatic HTTPS)
-# Install Caddy and create Caddyfile:
-# your-domain.com {
-#   reverse_proxy localhost:8080
-# }
-```
-
-## API Reference
-
-### WebSocket Connection
-
-Connect to: `ws://your-server:8080/ws`
-
-### Message Format
-
-All messages are JSON with this structure:
+All messages are JSON:
 ```json
 {
   "type": "message_type",
-  "payload": { /* type-specific data */ }
+  "payload": { /* data */ }
 }
 ```
 
-### Core Message Types
+### Key Messages
 
-#### Room Management
-
-**Create Room:**
+**Create Room (Host):**
 ```json
-{
-  "type": "create_room",
-  "payload": {
-    "username": "your_name"
-  }
-}
+{"type": "create_room", "payload": {"username": "Alice"}}
 ```
 
-**Join Room:**
+**Join Room (Guest):**
 ```json
-{
-  "type": "join_room",
-  "payload": {
-    "room_code": "ABC123XY",
-    "username": "your_name"
-  }
-}
+{"type": "join_room", "payload": {"room_code": "ABC123XY", "username": "Bob"}}
 ```
 
-**Leave Room:**
+**Approve Join (Host):**
 ```json
-{
-  "type": "leave_room"
-}
+{"type": "approve_join", "payload": {"user_id": "user_456"}}
 ```
 
-#### Playback Control (Host Only)
-
-**Change Track:**
+**Playback Control (Host):**
 ```json
-{
-  "type": "playback_action",
-  "payload": {
-    "action": "change_track",
-    "track_info": {
-      "id": "spotify_123",
-      "title": "Song Title",
-      "artist": "Artist Name",
-      "album": "Album Name",
-      "duration": 180000
-    }
-  }
-}
+{"type": "playback_action", "payload": {"action": "play", "position": 0}}
 ```
 
-**Play/Pause:**
-```json
-{
-  "type": "playback_action",
-  "payload": {
-    "action": "play",
-    "position": 0
-  }
-}
-```
-
-**Seek:**
-```json
-{
-  "type": "playback_action",
-  "payload": {
-    "action": "seek",
-    "position": 45000
-  }
-}
-```
-
-**Queue Operations:**
-```json
-{
-  "type": "playback_action",
-  "payload": {
-    "action": "queue_add",
-    "track_info": { /* TrackInfo */ },
-    "insert_next": false
-  }
-}
-```
-
-#### Song Suggestions
+Actions: `play`, `pause`, `seek`, `change_track`, `skip_next`, `skip_prev`, `queue_add`, `queue_remove`, `queue_clear`
 
 **Suggest Track (Guest):**
 ```json
-{
-  "type": "suggest_track",
-  "payload": {
-    "track_info": {
-      "id": "spotify_456",
-      "title": "Suggested Song",
-      "artist": "Artist",
-      "duration": 200000
-    }
-  }
-}
+{"type": "suggest_track", "payload": {"track_info": {"id": "123", "title": "Song", "artist": "Artist", "duration": 180000}}}
 ```
 
 **Approve Suggestion (Host):**
 ```json
-{
-  "type": "approve_suggestion",
-  "payload": {
-    "suggestion_id": "sug_123"
-  }
-}
+{"type": "approve_suggestion", "payload": {"suggestion_id": "sug_123"}}
 ```
 
-#### Room Control
-
-**Kick User (Host Only):**
+**Request Sync (Any):**
 ```json
-{
-  "type": "kick_user",
-  "payload": {
-    "user_id": "user_123",
-    "reason": "Optional reason"
-  }
-}
+{"type": "request_sync"}
 ```
 
-**Transfer Host:**
+**Leave Room:**
 ```json
-{
-  "type": "transfer_host",
-  "payload": {
-    "new_host_id": "user_456"
-  }
-}
+{"type": "leave_room"}
 ```
 
-## Configuration
+## Features
 
-### Environment Variables
+- ✅ Real-time synchronized playback
+- ✅ Room management with approval-based joining
+- ✅ Host playback control
+- ✅ Song suggestions from guests
+- ✅ Queue management
+- ✅ 15-minute reconnection window
+- ✅ Health check endpoint: `/health`
+
+## Environment Variables
 
 - `PORT` - Server port (default: 8080)
 
-### Constants (in main.go)
+## Architecture
 
-- `ReconnectGracePeriod` - Time to keep session before expiry (15 minutes)
-- `MaxUsernameLength` - Max username length (50 chars)
-- `MaxQueueSize` - Max queue size (1000 tracks)
-- `MaxReadMessageSize` - Max message size (512KB)
+- **Framework:** Gorilla WebSocket
+- **Language:** Go 1.21
+- **Logging:** Uber Zap
+- **Container:** Alpine Linux (10MB image)
+
+## File Structure
+
+```
+.
+├── main.go              # Core server logic
+├── go.mod / go.sum      # Dependencies
+├── Dockerfile           # Multi-stage build
+├── docker-compose.yml   # Local setup
+├── README.md            # This file
+├── QUICKSTART.md        # 5-min setup
+├── DEPLOYMENT.md        # Cloud deployment
+└── IMPLEMENTATION.md    # Android integration
+```
+
+## Common Message Flows
+
+### Creating & Joining a Room
+1. Host: `create_room` → receives `room_created` with room code
+2. Guest: `join_room` with code → Host receives `join_request`
+3. Host: `approve_join` → Guest receives `join_approved` with room state
+4. All: Receive `user_joined` notification
+
+### Playing Music
+1. Host: `playback_action` with `change_track` → All receive `sync_playback`
+2. Host: `playback_action` with `play` → All receive `sync_playback`
+3. Guest: `request_sync` → receives current `sync_state`
+
+### Song Suggestions
+1. Guest: `suggest_track` → Host receives `suggestion_received`
+2. Host: `approve_suggestion` → Queue updates, guest receives `suggestion_approved`
+3. Or Host: `reject_suggestion` → Guest receives `suggestion_rejected`
+
+## Errors
+
+Server sends error messages:
+```json
+{"type": "error", "payload": {"code": "error_code", "message": "description"}}
+```
+
+Common codes:
+- `room_not_found` - Room doesn't exist
+- `not_host` - Only host can do this action
+- `not_in_room` - User not in a room
+- `session_expired` - Reconnect window passed (>15 min)
+- `invalid_payload` - Malformed message
 
 ## Monitoring
 
-### Health Check
-
+Check server health:
 ```bash
 curl http://your-server:8080/health
 ```
 
-Response:
-```json
-{
-  "status": "ok"
-}
-```
-
-### Logs
-
-View server logs:
+View logs:
 ```bash
 docker logs -f auramusic-server
 ```
 
-The server logs all:
-- Client connections/disconnections
-- Room operations
-- Playback actions
-- Errors and warnings
+## Reconnection
 
-## Performance
-
-- **Lightweight** - ~10MB Docker image
-- **Memory** - ~50MB baseline
-- **Concurrent Users** - Tested up to 1000+ concurrent WebSocket connections
-- **Latency** - <100ms typical message round-trip
-- **Bandwidth** - ~1-2KB per message, highly compressible
-
-## Development
-
-### Project Structure
-
-```
-.
-├── main.go          # Main server logic
-├── go.mod          # Go module definition
-├── go.sum          # Dependency checksums
-├── Dockerfile      # Multi-stage Docker build
-├── docker-compose.yml
-├── deploy.sh       # Deployment helper script
-└── README.md
+If connection drops, save the session token from room creation:
+```json
+{"type": "reconnect", "payload": {"session_token": "token_xyz"}}
 ```
 
-### Building from Source
+Valid for 15 minutes. After that, must create/join new room.
 
-```bash
-go mod download
-CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o main .
-./main
+## For Android Integration
+
+See **IMPLEMENTATION.md** for Kotlin code examples.
+
+Update your app's server URL:
+```kotlin
+private val SERVER_URL = "wss://your-server-url.com/ws"
 ```
 
-### Making Changes
+## Deployment
 
-1. Edit `main.go`
-2. Rebuild: `go build -o main .`
-3. Test locally
-4. Commit and push
-5. Redeploy
+**Railway (Recommended - 2 min setup):**
+1. Push to GitHub
+2. Connect repo to railway.app
+3. Deploy
+4. Get public URL
 
-## Troubleshooting
-
-### Connection Issues
-
-**WebSocket fails to connect:**
-- Check server is running: `curl http://your-server:8080/health`
-- Verify firewall allows port 8080
-- Check WebSocket URL is `wss://` (TLS) for HTTPS endpoints
-
-**High latency:**
-- Check server CPU/memory: `docker stats`
-- Look for error logs: `docker logs auramusic-server`
-- Consider upgrading server hardware
-
-### Room Issues
-
-**Can't join room:**
-- Host must approve join request (room requires approval)
-- Room may have expired (15-minute idle timeout)
-- Check room code is correct
-
-**Playback out of sync:**
-- Ensure all clients implement `request_sync` on reconnect
-- Check network latency
-- Verify host is connected
+See **DEPLOYMENT.md** for detailed guides.
 
 ## License
 
 GPL-3.0
 
-## Support
-
-For issues, questions, or feature requests:
-1. Check this README
-2. Review server logs
-3. Open an issue on GitHub
-
-## Next Steps
-
-After deployment:
-
-1. **Update your Android app** to connect to your server URL
-2. **Test with friends** - Create a room and verify sync works
-3. **Monitor logs** - Check for any errors in production
-4. **Plan scaling** - If many users, upgrade hosting plan
-
 ---
 
-Built for AuraMusic with ❤️
+**Next Steps:**
+- Local testing: `docker-compose up -d`
+- Deploy: See DEPLOYMENT.md
+- Integrate: See IMPLEMENTATION.md
+- Questions: Check logs with `docker logs auramusic-server`
