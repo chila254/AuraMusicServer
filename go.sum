@@ -1,0 +1,10 @@
+github.com/google/go-cmp v0.6.0 h1:ofyhxvXcZhMsNcL/l+KFJjKWTj7VHEIBkxQl7MFZgU=
+github.com/google/go-cmp v0.6.0/go.mod h1:17dUlkBOakJ0+DkrSSNNcG5n+wTv8K9YKrYcZqsequQ=
+github.com/gorilla/websocket v1.5.3 h1:YR81580nyteQVAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
+github.com/gorilla/websocket v1.5.3/go.mod h1:YR8l1AqVvE1JaFXV2B78FwQgXV34uyapJ+x5bimtkE=
+go.uber.org/multierr v1.10.0 h1:S0h4uwASP7TWhM7a/M5vYX2JsZ+wZMk2j74uS50DqY=
+go.uber.org/multierr v1.10.0/go.mod h1:20+QtB9ynL5talMx027M9gjw7JJY8c7YLsqLg4nrsQ=
+go.uber.org/zap v1.27.1 h1:KbOLnwvM+7x2JKwPp5m0mC/0UKMV0XqPXqcZSVyXnc=
+go.uber.org/zap v1.27.1/go.mod h1:xDKt2o1CZZ0aHaQd6vdFZAP1f8TxfQp8H1QZAAB4mo=
+google.golang.org/protobuf v1.36.11 h1:Dol7QKYVuV6G6L7pVg8v7S3cxV8aMOPK0FGVL8L7eY=
+google.golang.org/protobuf v1.36.11/go.mod h1:yAmlVj1lUSWxPbxDhJrI8DqBnKSXt0a8dMqIJrjbsE=
