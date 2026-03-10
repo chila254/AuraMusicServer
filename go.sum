@@ -1,4 +1,4 @@
-github.com/gorilla/websocket v1.5.1 h1:gmztn0JnHVt9JWquRSQcxYEAqQ6HNTFG6eoqiHc2mQ=
+github.com/gorilla/websocket v1.5.1 h1:gmztn0JnHVt9JZquRuzLw3g4wouNVzKL15iLr/zn/QY=
 github.com/gorilla/websocket v1.5.1/go.mod h1:x3kM2gCUo8i/j6jbtEHXV5JJvN3ouvrKyVOkAHtPT8=
 go.uber.org/multierr v1.11.0 h1:blXXJkSGoesOQYDvjlTTQmC8SGLzoqVm9KLvqc38+M=
 go.uber.org/multierr v1.11.0/go.mod h1:20+QBTRclQe7qtn+9HrMMqqbVm40nCMvm2bNvoks/k=
