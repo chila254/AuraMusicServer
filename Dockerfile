@@ -7,17 +7,17 @@ RUN apk add --no-cache git bash
 # Set working directory
 WORKDIR /build
 
-# Copy go mod files
+# Copy go mod file only
 COPY go.mod ./
 
-# Download dependencies (skip checksum verification)
-RUN GOSUMDB=off go mod download && go mod tidy
+# Create empty go.sum and download dependencies
+RUN touch go.sum && go mod download && go mod tidy
 
 # Copy source code
 COPY . .
 
-# Build the application (skip checksum verification)
-RUN GOSUMDB=off CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o main -ldflags="-w -s" .
+# Build the application
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o main -ldflags="-w -s" .
 
 # Final stage - minimal runtime image
 FROM alpine:3.20
